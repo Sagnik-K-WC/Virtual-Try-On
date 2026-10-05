@@ -1,76 +1,182 @@
-# SCHP Segmentation Baseline
+# SCHP Human Parsing Baseline
 
-## Checkpoint
+## 1. Objective
 
-**Checkpoint:** SCHP Human Parsing Baseline Established
+Evaluate the pretrained SCHP human parsing model on the LIP validation dataset and establish a reproducible segmentation baseline for the Virtual Try-On project.
 
-**Status:** Validated
-
-The pretrained SCHP human parsing model was successfully integrated into the project and evaluated on the complete LIP validation set.
+The human parsing component provides pixel-level information about body parts and clothing regions. This information will later be used as part of the common human-perception layer of the Virtual Try-On system.
 
 ---
 
-## 1. Dataset Verification
+## 2. Model
 
-The LIP dataset was verified before model evaluation.
+**Model:** Self-Correction for Human Parsing (SCHP)
 
-### Training split
+**Checkpoint:**
 
-- Images: 30,462
-- Masks: 30,462
-- Missing masks: 0
-- Extra masks: 0
+`exp-schp-201908261155-lip.pth`
 
-### Validation split
+**Dataset:** LIP (Look into Person)
 
-- Images: 10,000
-- Masks: 10,000
-- Missing masks: 0
-- Extra masks: 0
+**Number of classes:** 20
 
-Both dataset splits passed verification.
+The 20 classes are:
 
----
-
-## 2. Human Parsing Classes
-
-The LIP label space contains 20 semantic classes:
-
-| ID | Class |
-|---:|---|
-| 0 | Background |
-| 1 | Hat |
-| 2 | Hair |
-| 3 | Glove |
-| 4 | Sunglasses |
-| 5 | Upper-clothes |
-| 6 | Dress |
-| 7 | Coat |
-| 8 | Socks |
-| 9 | Pants |
-| 10 | Jumpsuits |
-| 11 | Scarf |
-| 12 | Skirt |
-| 13 | Face |
-| 14 | Left-arm |
-| 15 | Right-arm |
-| 16 | Left-leg |
-| 17 | Right-leg |
-| 18 | Left-shoe |
-| 19 | Right-shoe |
+1. Background
+2. Hat
+3. Hair
+4. Glove
+5. Sunglasses
+6. Upper-clothes
+7. Dress
+8. Coat
+9. Socks
+10. Pants
+11. Jumpsuits
+12. Scarf
+13. Skirt
+14. Face
+15. Left-arm
+16. Right-arm
+17. Left-leg
+18. Right-leg
+19. Left-shoe
+20. Right-shoe
 
 ---
 
-## 3. Model
+## 3. Dataset
 
-The baseline uses:
+The LIP validation set contains:
 
-`pirocheto/schp-lip-20`
+- 10,000 validation images
+- 10,000 corresponding segmentation annotations
+- 20 semantic classes
 
-The model is loaded using the Hugging Face Transformers interface.
+The dataset was verified before evaluation.
 
-The model produces:
+### Dataset verification
 
-```text
-Parsing logits: [1, 20, 473, 473]
-Edge logits:    [1, 2, 473, 473]
+| Split | Images | Masks | Missing Masks | Extra Masks |
+|---|---:|---:|---:|---:|
+| Training | 30,462 | 30,462 | 0 | 0 |
+| Validation | 10,000 | 10,000 | 0 | 0 |
+
+Both dataset splits passed the verification checks.
+
+---
+
+## 4. Evaluation Setup
+
+The original SCHP repository evaluation pipeline was used rather than a custom metric implementation.
+
+The evaluation was performed using:
+
+- Input size: 473 × 473
+- Batch size: 1
+- GPU: NVIDIA GeForce RTX 5060 Laptop GPU
+- Validation samples: 10,000
+- Number of classes: 20
+- Pretrained SCHP LIP checkpoint
+
+The original SCHP evaluation code was adapted only where necessary to run the original implementation in the modern project environment.
+
+---
+
+## 5. Results
+
+The complete LIP validation set was evaluated successfully.
+
+### Overall metrics
+
+| Metric | Result |
+|---|---:|
+| Pixel Accuracy | **88.10%** |
+| Mean Accuracy | **72.76%** |
+| Mean IoU (mIoU) | **58.62%** |
+
+The complete evaluation processed all:
+
+**10,000 / 10,000 validation images**
+
+---
+
+## 6. Per-Class Results
+
+| Class | IoU / Accuracy (%) |
+|---|---:|
+| Background | 88.36 |
+| Hat | 69.96 |
+| Hair | 73.55 |
+| Glove | 50.46 |
+| Sunglasses | 40.74 |
+| Upper-clothes | 69.93 |
+| Dress | 39.01 |
+| Coat | 57.45 |
+| Socks | 54.29 |
+| Pants | 76.00 |
+| Jumpsuits | 32.86 |
+| Scarf | 26.32 |
+| Skirt | 31.70 |
+| Face | 76.19 |
+| Left-arm | 68.64 |
+| Right-arm | 70.92 |
+| Left-leg | 67.27 |
+| Right-leg | 66.57 |
+| Left-shoe | 55.75 |
+| Right-shoe | 56.47 |
+
+---
+
+## 7. Interpretation
+
+The pretrained SCHP model provides a strong human-parsing baseline for the project.
+
+The overall mIoU of **58.62%** indicates that the model can produce meaningful pixel-level segmentation across the 20 LIP semantic classes.
+
+The model performs particularly well on large and visually distinctive regions such as:
+
+- Background
+- Pants
+- Face
+- Hair
+- Upper-clothes
+- Arms
+- Legs
+
+Smaller or visually ambiguous regions such as scarves, skirts, jumpsuits, sunglasses, and dresses are more difficult and have lower scores.
+
+For the Virtual Try-On system, the most important aspect is that SCHP can provide structured information about clothing and body regions rather than simply detecting the person as one object.
+
+---
+
+## 8. Project Decision
+
+The pretrained SCHP checkpoint will be used as the initial human-parsing component of the Virtual Try-On perception pipeline.
+
+Further training of SCHP is not currently required because the pretrained model already provides a strong validated baseline.
+
+The focus will therefore shift toward integrating the segmentation output with:
+
+1. Pose estimation
+2. Person representation
+3. Garment processing
+4. CatVTON
+5. Real-time processing
+
+Any future fine-tuning will be treated as an experimental improvement over this baseline rather than a requirement for the initial system.
+
+---
+
+## 9. Baseline Status
+
+**Status: VALIDATED**
+
+- Dataset verified
+- Pretrained checkpoint verified
+- Original evaluation pipeline executed
+- 10,000 validation images evaluated
+- mIoU: **58.62%**
+- Pixel accuracy: **88.10%**
+
+This baseline will be used for comparison against any future segmentation experiments.
