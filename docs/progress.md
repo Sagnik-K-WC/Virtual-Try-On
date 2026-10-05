@@ -1,27 +1,21 @@
 # Project Progress
 
-This document records the development history of the Virtual Try-On
-project, including major decisions, experiments, problems, solutions,
-and validated milestones.
+This document records the major development stages, experiments, decisions, and validated milestones of the Virtual Try-On project.
 
 ---
 
-## Phase 1 — Project Concept
+## Phase 1 — Project Concept and Architecture
 
 ### Objective
 
-Develop a machine-learning-based Virtual Try-On system supporting both:
+Develop a unified machine-learning-based Virtual Try-On system supporting two operating modes:
 
-- Photo-based virtual try-on
-- Real-time camera-based virtual try-on
-
-The system is designed around a shared human-perception layer followed
-by different processing paths for photo generation and real-time
-interaction.
+- **Photo-Based Virtual Try-On** — a user provides a person image and a garment image, and the system generates a high-quality try-on result.
+- **Real-Time Virtual Try-On** — a camera-based pipeline tracks the user's body and garment placement to provide an interactive try-on experience.
 
 ### Initial Architecture
 
-The planned system consists of:
+The planned system consists of the following major components:
 
 1. Person Detection
 2. Pose Estimation
@@ -33,30 +27,44 @@ The planned system consists of:
 8. Tracking and Real-Time Fitting
 9. Rendering
 
+The system is designed around a shared human-perception layer. Photo-based and real-time modes then use the perception outputs differently according to their requirements.
+
+### Development Strategy
+
+The project does not aim to train a complete Virtual Try-On generation model from scratch. Instead:
+
+- Pose estimation and human parsing/segmentation form the main machine-learning development components.
+- A pretrained Virtual Try-On model is used for high-quality image generation.
+- The final system will integrate these components into a unified pipeline.
+
 ---
 
 ## Phase 2 — CatVTON Proof of Concept
 
 ### Objective
 
-Establish that a pretrained Virtual Try-On generation model can be
-executed locally and produce a successful try-on result.
+Validate that a pretrained Virtual Try-On generation model could be executed locally and produce a successful try-on result.
 
 ### Work Completed
 
-- Set up the CatVTON environment locally.
-- Resolved dependency compatibility issues.
-- Successfully launched the CatVTON Gradio application.
-- Supplied a person image and an upper-body garment image.
+- Set up a dedicated CatVTON environment.
+- Resolved PEFT and Accelerate compatibility issues.
+- Resolved Gradio, FastAPI, and Starlette compatibility issues.
+- Verified the environment using `pip check`.
+- Successfully loaded the pretrained CatVTON model.
+- Launched the CatVTON Gradio application locally.
+- Provided a person image and an upper-body garment image.
 - Successfully generated a virtual try-on result.
 
 ### Outcome
 
-The CatVTON generation component was successfully validated as a
-working pretrained inference component.
+CatVTON inference was successfully demonstrated locally.
 
-This established the VTO generation stage that will later be integrated
-with the project's perception components.
+This established the Virtual Try-On generation stage as a working pretrained component that can later be integrated with the project's perception components.
+
+### Status
+
+**✓ Completed — CatVTON successfully tested**
 
 ---
 
@@ -64,106 +72,249 @@ with the project's perception components.
 
 ### Objective
 
-Develop and evaluate a pose-estimation component for identifying human
-body keypoints.
+Develop and evaluate a pose-estimation component capable of identifying human body keypoints for the human-perception layer.
 
-### Work Completed
+### Dataset and Environment
 
-- Set up an Ultralytics YOLO pose environment.
-- Verified GPU/CUDA acceleration.
-- Evaluated YOLO26n and YOLO26s pose models.
-- Trained models on the COCO Pose dataset.
-- Evaluated pose precision, recall, and mAP metrics.
-- Investigated model continuation and fine-tuning behavior.
+Pose experiments were conducted using the COCO Pose dataset with the Ultralytics YOLO pose framework.
 
-### Current Status
+The training environment was configured for GPU acceleration using the NVIDIA GeForce RTX 5060 Laptop GPU.
 
-Pose estimation is being developed as part of the human-perception
-component of the system.
+### Initial Sanity Experiment — YOLO26n
 
----
+A one-epoch YOLO26n training run was performed as a sanity check to verify that the complete training pipeline was functioning correctly.
 
-## Phase 4 — Human Parsing / Segmentation
+Approximate validation results:
 
-### Objective
+| Metric | Result |
+|---|---:|
+| Precision | 0.662 |
+| Recall | 0.497 |
+| mAP50 | 0.504 |
+| mAP50-95 | 0.197 |
 
-Develop a human-parsing component that identifies semantic human
-regions at pixel level.
+This experiment was used primarily to validate the training pipeline and was not treated as the final pose result.
 
-### Dataset
+### YOLO26n — 5 Epochs
 
-The LIP (Look into Person) dataset was selected for human parsing.
+A longer five-epoch YOLO26n experiment was subsequently performed.
 
-It provides 20 semantic classes including:
+Approximate validation results:
 
-- Background
-- Hair
-- Upper-clothes
-- Dress
-- Coat
-- Pants
-- Face
-- Arms
-- Legs
-- Shoes
-- Other human/clothing regions
+| Metric | Result |
+|---|---:|
+| Precision | 0.807 |
+| Recall | 0.695 |
+| mAP50 | 0.745 |
+| mAP50-95 | 0.459 |
 
-### Model Selection
+The experiment demonstrated substantial improvement compared with the one-epoch sanity run.
 
-SCHP (Self-Correction for Human Parsing) was selected because it is
-specifically designed for human parsing and provides a pretrained model
-for the LIP label set.
+### YOLO26s — 5 Epochs
 
-### Work Completed
+A larger YOLO26s pose model was also trained for five epochs.
 
-- Acquired and verified the LIP dataset.
-- Verified training and validation image/mask correspondence.
-- Set up a modern SCHP environment.
-- Successfully compiled the original SCHP InPlaceABNSync extension.
-- Loaded the original pretrained SCHP LIP checkpoint.
-- Reproduced the original repository evaluation pipeline.
-- Evaluated all 10,000 LIP validation images.
+Validation results:
 
-### Baseline Result
+| Metric | Result |
+|---|---:|
+| Precision | 0.812 |
+| Recall | 0.675 |
+| mAP50 | 0.729 |
+| mAP50-95 | 0.431 |
 
-Original SCHP evaluation:
+The larger model did not automatically produce higher validation mAP than the YOLO26n experiment at the same five-epoch training duration.
 
-**mIoU: 58.62%**
+### Continuation and Fine-Tuning Investigation
 
-### Flip TTA Experiment
+Attempts were made to continue training from the five-epoch YOLO26s checkpoint.
 
-Horizontal flip test-time augmentation was evaluated using the original
-SCHP implementation, including left/right semantic-class correction.
+The original Ultralytics resume mechanism reported that the configured five-epoch run had already completed and therefore could not simply be resumed by changing the epoch count.
 
-Result:
-
-**mIoU: 59.00%**
+A separate continuation-style experiment and a controlled low-learning-rate fine-tuning experiment were subsequently investigated. These experiments resulted in substantial degradation and were not adopted as project models.
 
 ### Current Decision
 
-SCHP with horizontal flip TTA is currently selected as the human-parsing
-configuration for the project.
+The five-epoch YOLO pose experiments are retained as experimental results. Further pose training and selection will be performed later if required by the integrated system.
 
+### Status
+
+**✓ Pose model trained and evaluated**
+
+**Note:** Pose estimation is considered an experimental/validated component at this stage rather than a final production model.
+
+---
+
+## Phase 4 — LIP Dataset Preparation
+
+### Objective
+
+Prepare a suitable human-parsing dataset for the segmentation component.
+
+### Dataset Selection
+
+The **LIP (Look Into Person)** dataset was selected for human parsing.
+
+The dataset provides 20 semantic classes representing human parts and clothing regions.
+
+### Dataset Statistics
+
+| Split | Images | Masks |
+|---|---:|---:|
+| Training | 30,462 | 30,462 |
+| Validation | 10,000 | 10,000 |
+| Test | 10,000 | — |
+
+### Dataset Verification
+
+Image and segmentation-mask correspondence was programmatically verified.
+
+#### Training Set
+
+- Images: 30,462
+- Masks: 30,462
+- Missing masks: 0
+- Extra masks: 0
+
+#### Validation Set
+
+- Images: 10,000
+- Masks: 10,000
+- Missing masks: 0
+- Extra masks: 0
+
+### Outcome
+
+The downloaded LIP training and validation data were successfully verified and found to have complete image/mask correspondence.
+
+### Status
+
+**✓ Completed — LIP dataset verified**
+
+---
+
+## Phase 5 — SCHP Human Parsing / Segmentation
+
+### Objective
+
+Develop a pixel-level human-parsing component that identifies semantic human and clothing regions in a person image.
+
+Unlike pose estimation, which identifies body keypoints, human parsing provides a semantic label for each pixel.
+
+This allows the Virtual Try-On system to distinguish regions such as upper clothes, dresses, coats, pants, arms, legs, face, hair, and shoes.
+
+### Model Selection
+
+**SCHP (Self-Correction for Human Parsing)** was selected because it is specifically designed for human parsing and provides a pretrained model for the LIP semantic label space.
+
+The model operates with the 20-class LIP representation.
+
+### Environment and Compatibility Work
+
+The original SCHP repository uses an older PyTorch/CUDA toolchain and a custom InPlaceABNSync extension.
+
+A separate environment was therefore configured to reproduce the original evaluation pipeline on the project's NVIDIA RTX 5060 Laptop GPU.
+
+Compatibility work included:
+
+- configuring a compatible PyTorch/CUDA environment,
+- installing the required CUDA development tools,
+- configuring the Visual Studio C++ build environment,
+- compiling the custom InPlaceABNSync extension,
+- applying required compatibility adjustments to the original extension source.
+
+The original pretrained SCHP LIP checkpoint was subsequently loaded successfully.
+
+### Official Baseline Evaluation
+
+The original SCHP evaluation procedure was reproduced and executed on the complete 10,000-image LIP validation set.
+
+Validated results:
+
+| Metric | Result |
+|---|---:|
+| Pixel Accuracy | 88.10% |
+| Mean Accuracy | 72.76% |
+| Mean IoU | **58.62%** |
+
+The **58.62% mIoU** result is currently used as the project's official SCHP human-parsing baseline.
+
+### Additional Evaluation Investigation
+
+Initial custom evaluation approaches produced lower results than expected. The evaluation procedure was therefore investigated rather than assuming that the pretrained model was performing poorly.
+
+This led to reproduction of the original SCHP evaluation pipeline and the validated 58.62% mIoU baseline.
+
+Horizontal flip test-time augmentation was also investigated as an additional experiment. Because the project requires a clearly defined and reproducible baseline, the original SCHP evaluation result of 58.62% mIoU is retained as the official baseline.
+
+### Fine-Tuning Investigation
+
+The SCHP training pipeline was tested progressively:
+
+1. Single-batch training test
+2. Small eight-image training test
+3. 500-image fine-tuning experiment
+
+These tests verified that the training pipeline could perform forward propagation, loss calculation, backpropagation, and parameter updates.
+
+The 500-image experiment did not provide evidence that fine-tuning improved the pretrained baseline. Its evaluation procedure also differed from the definitive original SCHP evaluation protocol, so its result is not treated as a directly comparable official performance figure.
+
+### Current Decision
+
+The validated pretrained SCHP model is retained as the current human-parsing baseline.
+
+Further fine-tuning is not currently required.
+
+### Status
+
+**✓ Completed — SCHP human parsing validated**
+
+**✓ Segmentation baseline documented**
+
+---
+
+## Phase 6 — Project Repository Organization
+
+### Objective
+
+Organize the project into a shared GitHub repository containing source code, documentation, experiments, and reproducible project structure.
+
+### Repository Structure
+
+The repository separates major system components into:
+
+- `perception/` — human perception components
+- `garment/` — garment processing
+- `vton/` — Virtual Try-On generation
+- `realtime/` — real-time camera pipeline
+- `integration/` — system integration
+- `evaluation/` — evaluation utilities
+- `docs/` — project documentation
+- `requirements/` — environment requirements
+
+### Segmentation Organization
+
+The segmentation component is organized into:
+
+```text
+perception/segmentation/
+├── datasets/
+├── evaluation/
+├── experiments/
+└── inference/
 ---
 
 ## Current Project Status
 
-The project currently has independently validated components for:
+```text
+✓ Project architecture defined
+✓ CatVTON successfully tested
+✓ Pose model trained/evaluated
+✓ LIP dataset verified
+✓ SCHP human parsing validated
+✓ Segmentation baseline documented
 
-- Virtual Try-On generation using CatVTON
-- Human pose estimation experiments
-- Human parsing using SCHP
-
-The next major objective is to integrate these components into the
-common perception and Virtual Try-On pipeline.
-
----
-
-## Next Steps
-
-1. Organize validated code and experiments into the project repository.
-2. Integrate human perception outputs.
-3. Develop garment preprocessing and alignment.
-4. Integrate the perception layer with CatVTON.
-5. Develop the real-time camera pipeline.
-6. Evaluate the complete system.
+⏳ Segmentation integration
+⏳ Garment processing
+⏳ Real-time pipeline
+⏳ Full system integration
