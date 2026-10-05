@@ -1,0 +1,95 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================
+# Virtual environments
+# ==============================
+.venv/
+venv/
+env/
+ENV/
+
+# Project-specific environments
+pose-env/
+segmentation-env/
+vton-env/
+schp-original-env/
+
+# ==============================
+# Datasets
+# ==============================
+datasets/
+data/
+*.zip
+
+# ==============================
+# Model weights / checkpoints
+# ==============================
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
+# ==============================
+# Training outputs
+# ==============================
+runs/
+wandb/
+mlruns/
+logs/
+checkpoints/
+
+# ==============================
+# Generated outputs
+# ==============================
+outputs/
+results/
+generated/
+*.mp4
+*.avi
+*.mov
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# VS Code
+# ==============================
+.vscode/
+*.code-workspace
+
+# ==============================
+# OS files
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Temporary files
+# ==============================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.log
+
+# ==============================
+# Large local files
+# ==============================
+*.exe
+*.dll
+*.so
+*.o
+*.obj
