@@ -93,3 +93,5 @@ desktop.ini
 *.so
 *.o
 *.obj
+# Local project configuration
+local_paths.txt

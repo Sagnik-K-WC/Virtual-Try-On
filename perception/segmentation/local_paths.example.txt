@@ -1,0 +1,9 @@
+# Copy this information into your own terminal/environment.
+#
+# Windows PowerShell:
+#
+# $env:LIP_DATASET_ROOT="C:\path\to\your\LIP"
+#
+# Example:
+#
+# $env:LIP_DATASET_ROOT="D:\Datasets\LIP"
