@@ -302,6 +302,8 @@ perception/segmentation/
 ├── evaluation/
 ├── experiments/
 └── inference/
+```
+
 ---
 
 ## Current Project Status
@@ -318,3 +320,4 @@ perception/segmentation/
 ⏳ Garment processing
 ⏳ Real-time pipeline
 ⏳ Full system integration
+```
