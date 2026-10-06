@@ -95,3 +95,11 @@ desktop.ini
 *.obj
 # Local project configuration
 local_paths.txt
+
+# Secrets / local configuration
+.env
+.env.*
+*.secret
+secrets/
+credentials/
+credentials.json
