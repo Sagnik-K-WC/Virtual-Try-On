@@ -2,9 +2,11 @@
 
 ## Purpose
 
-This document records experiments performed during development of the human parsing component.
+This document records the experiments and investigations performed during development of the human-parsing component.
 
-The validated SCHP pretrained checkpoint is documented separately in `baseline.md`.
+The validated SCHP pretrained baseline is documented separately in [`baseline.md`](baseline.md).
+
+The experiments recorded here include evaluation investigations, test-time augmentation, training-pipeline verification, and fine-tuning experiments.
 
 ---
 
@@ -12,25 +14,40 @@ The validated SCHP pretrained checkpoint is documented separately in `baseline.m
 
 An initial evaluation pipeline was developed to test the pretrained SCHP model.
 
-The first direct single-scale evaluation produced a lower mIoU than the published SCHP result.
+The first direct single-scale evaluation produced a substantially lower mIoU than the published SCHP result.
 
-This led to investigation of the original SCHP evaluation procedure.
+Rather than assuming that the pretrained model was underperforming, the evaluation procedure was investigated to determine whether differences in preprocessing, model output handling, or evaluation methodology were responsible.
 
-The original repository evaluation code was subsequently reproduced using the original checkpoint and LIP validation structure.
+This led to reproduction of the original SCHP evaluation procedure.
+
+### Outcome
+
+The initial custom evaluation was not used as the project's official quantitative baseline.
 
 ---
 
 ## 2. Original SCHP Evaluation Reproduction
 
-The original SCHP repository evaluation pipeline was successfully executed in a modern Windows environment.
+The original SCHP repository evaluation pipeline was successfully reproduced in a modern Windows environment.
 
-Compatibility work was required because the original repository uses an older PyTorch/CUDA toolchain.
+The original repository uses an older PyTorch/CUDA toolchain and a custom `InPlaceABNSync` extension.
 
-The model's custom InPlaceABNSync extension was successfully compiled after compatibility adjustments.
+Compatibility work was therefore required to:
 
-The original checkpoint was then evaluated on all 10,000 LIP validation images.
+- configure a compatible PyTorch/CUDA environment,
+- configure the CUDA development toolchain,
+- configure the Visual Studio C++ build environment,
+- compile the custom InPlaceABNSync extension,
+- apply compatibility adjustments to the original extension source.
 
-Result:
+The original pretrained SCHP LIP checkpoint was then evaluated using the original evaluation procedure.
+
+### Evaluation Set
+
+The complete LIP validation set was used:
 
 ```text
-mIoU = 58.62%
+Validation images: 10,000
+Semantic classes: 20
+Input resolution: 473 × 473
+Batch size: 1
