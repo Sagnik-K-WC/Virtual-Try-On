@@ -60,6 +60,7 @@ The planned system follows the architecture below:
                                      │
                                   Real-Time
                                      AR
+```
 
 ## Project Modes
 
@@ -436,4 +437,3 @@ Complete System Evaluation
 ```
 
 The immediate technical priority is to create reusable interfaces between the validated perception components and the rest of the Virtual Try-On pipeline.
-```
